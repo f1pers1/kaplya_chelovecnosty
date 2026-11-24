@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#101a25"><title>Капля человечности — кликер</title>
+<style>
+:root{--bg:#101a25;--panel:#1b2b3b;--panel2:#24394b;--gold:#ffd36a;--cyan:#83e5d1;--text:#f5f2e9;--muted:#aabac7;--line:#ffffff20}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#29485a,#101a25 65%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:16px 12px 100px}
+button{font:inherit;color:inherit;border:0;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.game{max-width:520px;margin:auto}header{text-align:center;margin:4px 0 14px}h1{font-size:clamp(24px,6vw,34px);margin:0}.sub{color:var(--muted);font-size:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}.stat,.panel{background:#172735dc;border:1px solid var(--line);border-radius:18px}.stat{padding:10px;text-align:center}.stat small{display:block;color:var(--muted);font-size:12px}.stat b{display:block;color:var(--gold);font-size:22px}
+.screen{display:none}.screen.active{display:block}.hero{min-height:350px;display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative;overflow:hidden;background:linear-gradient(#07121a66,#07121aaa),var(--scene,linear-gradient(140deg,#426b5c,#1a342e));background-size:cover;background-position:center;border:1px solid #ffffff35;border-radius:24px;padding:20px;text-align:center}
+.hero .who{font-weight:800;font-size:20px;margin:8px}.hero .mult{color:var(--gold);font-weight:800}.char-img{width:170px;height:170px;object-fit:contain;border-radius:22px;filter:drop-shadow(0 10px 20px #0008);user-select:none}
+.tap{margin-top:15px;background:linear-gradient(135deg,#ffe08a,#e6a936);color:#33240c;font-weight:900;padding:15px 32px;border-radius:999px;box-shadow:0 7px 0 #8b5b1b,0 12px 25px #0005;transition:.08s}.tap:active{transform:translateY(5px);box-shadow:0 2px 0 #8b5b1b}
+.panel{padding:15px;margin-top:12px}.panel h2{font-size:18px;margin:0 0 12px}.muted{color:var(--muted)}.nav{position:fixed;z-index:5;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:5px;padding:8px 5px calc(8px + env(safe-area-inset-bottom));background:#0b141eee;border-top:1px solid var(--line);backdrop-filter:blur(12px)}.nav button{flex:1;max-width:90px;padding:8px 3px;border-radius:12px;background:transparent;color:var(--muted);font-size:11px}.nav button span{display:block;font-size:20px;margin-bottom:2px}.nav button.active{background:#29465a;color:var(--gold)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.char-card,.item-card{background:#213648;border:1px solid var(--line);border-radius:15px;padding:10px;text-align:center;min-width:0}.char-card img{width:100%;height:120px;object-fit:contain;border-radius:10px}.char-card b{display:block;font-size:14px;margin:5px 0}.char-card small{display:block;color:var(--muted);font-size:11px;min-height:30px}.action{background:#e7b84f;color:#2b210d;border-radius:10px;padding:9px 12px;font-weight:800;width:100%;margin-top:8px}.action.secondary{background:#38566a;color:var(--text)}.rarity{font-size:11px;font-weight:800;color:var(--cyan)}.banner{border:1px solid #e8bd58;border-radius:18px;padding:15px;text-align:center;background:linear-gradient(135deg,#4a345f,#263a55)}.banner .big{font-size:42px}.chance-list{display:grid;gap:6px;margin-top:12px}.chance{display:flex;justify-content:space-between;padding:7px 9px;background:#ffffff0c;border-radius:8px;font-size:12px}.result{margin-top:12px;text-align:center;padding:12px;border:1px solid var(--gold);border-radius:14px;background:#ffffff0b}.result img{width:120px;height:120px;object-fit:contain}.slider-row{margin:15px 0}.slider-row label{display:flex;justify-content:space-between;margin-bottom:8px}.slider-row input{width:100%;accent-color:var(--gold)}.background-card{min-height:120px;background-size:cover;background-position:center;display:flex;flex-direction:column;justify-content:end;align-items:stretch;padding:10px;border-radius:14px;overflow:hidden}.background-card strong{background:#08121dcc;padding:7px;border-radius:8px}.notice{font-size:12px;color:var(--muted);line-height:1.5}
+.inventory-summary{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;margin-bottom:12px}
+.inventory-card{position:relative}.inventory-card.locked{filter:grayscale(1);opacity:.55}
+.upgrade-grid{display:grid;grid-template-columns:1fr;gap:9px}.upgrade-item{text-align:left}
+.upgrade-item .meta{font-size:12px;color:var(--muted);margin:5px 0}
+.promo-row{display:flex;gap:8px}.promo-row input{min-width:0;flex:1;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0f1d29;color:var(--text);font:inherit;text-transform:lowercase}
+.promo-message{min-height:22px;margin-top:8px;font-size:13px}.promo-message.ok{color:#8be0b1}.promo-message.err{color:#ff9c9c}
+.badge-owned{display:inline-block;padding:3px 7px;border-radius:20px;background:#2b695b;color:#a8f0d5;font-size:10px;font-weight:800}
+.float{position:absolute;color:#fff0a8;font-weight:900;pointer-events:none;animation:up .8s forwards;text-shadow:0 2px 5px #000}@keyframes up{to{transform:translateY(-55px);opacity:0}}
+@media(min-width:520px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head><body><main class="game">
+<header><h1>💧 Капля человечности</h1><div class="sub">Банный кликер · новая смена</div></header>
+<div class="stats"><div class="stat"><small><img src="assets/ui/drop.png" style="width:15px;height:15px;object-fit:contain;vertical-align:-3px"> Капли человечности</small><b id="currency">0</b></div><div class="stat"><small>За одно нажатие</small><b id="power">1</b></div></div>
+<section id="home" class="screen active">
+<div class="hero" id="hero"><img id="heroImg" class="char-img" alt=""><div class="who" id="heroName"></div><div class="mult" id="heroMult"></div><button class="tap" id="tap">КАПНУТЬ <img src="assets/ui/drop.png" style="width:18px;height:18px;object-fit:contain;vertical-align:-4px"></button></div>
+<div class="panel"><h2>Текущий бонус</h2><div id="bonusText" class="muted"></div></div>
+</section>
+<section id="inventory" class="screen"><div class="panel"><h2>🎒 Инвентарь персонажей</h2><div class="inventory-summary"><span id="inventoryCount">Персонажей: 1/10</span><span>Нажми «Выбрать», чтобы сменить персонажа</span></div><div class="cards" id="inventoryCards"></div></div></section>
+<section id="shop" class="screen"><div class="panel"><h2>🛒 Магазин персонажей</h2><p class="notice">В магазине доступны только Uncommon, Rare и Epic. Остальные персонажи добываются в баннере.</p><div class="cards" id="shopCards"></div></div></section>
+<section id="banner" class="screen"><div class="panel"><h2>✨ Баннер персонажей</h2><div class="banner"><div class="big">🎴</div><b>Баннер призыва</b><p class="notice">Одна крутка стоит 1 500 капель человечности. Повторный персонаж приносит 100 капель.</p><button class="action" id="roll">КРУТИТЬ · 1 500 💧</button></div><div id="rollResult"></div><h2 style="margin-top:16px">Шансы выпадения</h2><div class="chance-list" id="chances"></div></div></section>
+<section id="backgrounds" class="screen"><div class="panel"><h2>🖼️ Смена фона</h2><p class="notice">Каждый фон даёт свой множитель заработка. Выбери доступный фон.</p><div class="cards" id="backgroundCards"></div></div></section>
+<section id="upgrade" class="screen"><div class="panel"><h2>⚡ Прокачка</h2><p class="notice">Улучшения увеличивают базовый доход за нажатие.</p><div id="upgrades"></div></div></section>
+<section id="settings" class="screen"><div class="panel"><h2>⚙️ Настройки</h2><div class="slider-row"><label>Музыка <b id="musicValue">50%</b></label><input id="musicVolume" type="range" min="0" max="100" value="50"></div><div class="slider-row"><label>Громкость нажатий <b id="soundValue">70%</b></label><input id="soundVolume" type="range" min="0" max="100" value="70"></div><button class="action secondary" id="musicToggle">Выключить музыку</button><h2 style="margin-top:20px">🎟️ Промокоды</h2><p class="notice">Введи промокод и нажми «Активировать». Каждый код можно использовать один раз.</p><div class="promo-row"><input id="promoInput" type="text" placeholder="Например, мистер" autocomplete="off"><button class="action" id="promoActivate" style="width:auto;margin:0">Активировать</button></div><div id="promoMessage" class="promo-message"></div><button class="action secondary" id="save">Сохранить прогресс</button><button class="action secondary" id="reset">Сбросить прогресс</button><p class="notice">Музыка запускается автоматически и повторяется по кругу. Если браузер блокирует автозапуск, нажми на экран один раз.</p></div></section>
+</main>
+<nav class="nav">
+<button data-screen="home" class="active"><span>🏠</span>Главная</button><button data-screen="inventory"><span>🎒</span>Инвентарь</button><button data-screen="shop"><span>🛒</span>Магазин</button><button data-screen="banner"><span>🎴</span>Баннер</button><button data-screen="backgrounds"><span>🌄</span>Фон</button><button data-screen="upgrade"><span>⚡</span>Прокачка</button><button data-screen="settings"><span>⚙️</span>Настройки</button>
+</nav>
+<audio id="music" src="assets/music/background.mp3" loop></audio>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),fmt=n=>Number.isFinite(n)?Math.floor(n).toLocaleString('ru-RU'):'∞';
+const chars=[
+{id:'Чеченец',rarity:'Common',mult:1,chance:0,price:0},
+{id:'Поч братан',rarity:'Uncommon',mult:1.1,chance:40,price:500},
+{id:'Гуль братан',rarity:'Rare',mult:1.25,chance:21.9,price:1500},
+{id:'Пантера',rarity:'Epic',mult:1.5,chance:15,price:4000},
+{id:'Джон Кобиль',rarity:'Mythic',mult:2,chance:10},
+{id:'Глебасик',rarity:'Legendary',mult:2.5,chance:5},
+{id:'Эль Миньон',rarity:'Ancient',mult:3,chance:4},
+{id:'Ронни Спагетти',rarity:'Divine',mult:5,chance:3},
+{id:'Покровитель Голды',rarity:'Transcendent',mult:50,chance:1},
+{id:'Тимогей',rarity:'One-of-a-Kind',mult:Infinity,chance:.1}
+];
+const bgs=[{id:'банька',file:'assets/backgrounds/bg01.jpg',mult:1},{id:'лесенка',file:'assets/backgrounds/bg02.jpg',mult:1.5}];
+const defaultState={drops:0,owned:['Чеченец'],selected:'Чеченец',bg:'банька',upgrades:0,autoLevel:0,critLevel:0,critPowerLevel:0,redeemedPromos:[],music:50,sound:70,musicOn:true};
+let state;try{state={...defaultState,...JSON.parse(localStorage.getItem('humanDropSave')||'{}')};}catch{state={...defaultState};}
+if(!Array.isArray(state.owned)||!state.owned.includes('Чеченец'))state.owned=['Чеченец'];
+state.autoLevel=Number(state.autoLevel)||0;state.critLevel=Number(state.critLevel)||0;state.critPowerLevel=Number(state.critPowerLevel)||0;if(!Array.isArray(state.redeemedPromos))state.redeemedPromos=[];
+// If the earlier 5,000-drop version of 'мистер' was already redeemed, credit the 45,000 difference once.
+if(state.redeemedPromos.includes('мистер')&&!state.misterPromoUpgradeCompensated){state.drops+=45000;state.misterPromoUpgradeCompensated=true;}
+if(!chars.some(c=>c.id===state.selected)||!state.owned.includes(state.selected))state.selected='Чеченец';
+if(!bgs.some(b=>b.id===state.bg))state.bg=bgs[0].id;
+const charFiles={'Чеченец':'c01.jpg','Поч братан':'c02.jpg','Гуль братан':'c03.jpg','Пантера':'c04.jpg','Джон Кобиль':'c05.jpg','Глебасик':'c06.jpg','Эль Миньон':'c07.jpg','Ронни Спагетти':'c08.jpg','Покровитель Голды':'c09.jpg','Тимогей':'c10.jpg'};
+const soundFiles={'Поч братан':'s02.mp3','Пантера':'s04.mp3','Тимогей':'s10.mp3','Глебасик':'s06.mp3','Покровитель Голды':'s09.mp3','Эль Миньон':'s07.mp3'};
+const characterImage=id=>'assets/characters/'+charFiles[id];
+const characterSound=id=>soundFiles[id]?'assets/sounds/'+soundFiles[id]:null;
+const character=()=>chars.find(c=>c.id===state.selected)||chars[0];
+const background=()=>bgs.find(b=>b.id===state.bg)||bgs[0];
+const multiplier=()=>character().mult*background().mult;
+const power=()=>Math.max(1,Math.floor((1+state.upgrades)*multiplier()));
+const autoIncome=()=>state.autoLevel*multiplier();
+const critChance=()=>Math.min(50,state.critLevel*2);
+const critMultiplier=()=>2+state.critPowerLevel*.5;
+const upgradeCost=(base,level)=>Math.floor(base*Math.pow(1.65,level));
+function save(){localStorage.setItem('humanDropSave',JSON.stringify(state));}
+if(state.misterPromoUpgradeCompensated)save();
+function sayFloat(text){const f=document.createElement('span');f.className='float';f.textContent=text;f.style.left=(30+Math.random()*45)+'%';f.style.top='58%';$('hero').append(f);setTimeout(()=>f.remove(),850);}
+function render(){
+$('currency').textContent=fmt(state.drops);$('power').textContent=fmt(power());
+$('heroImg').src=characterImage(character().id);$('heroName').textContent=character().id;$('heroMult').textContent='Доход персонажа ×'+(character().mult===Infinity?'∞':character().mult)+' · общий бонус ×'+(multiplier()===Infinity?'∞':multiplier());
+$('hero').style.setProperty('--scene',`linear-gradient(#07121a55,#07121aaa),url("${background().file}")`);
+$('bonusText').textContent=`Фон «${background().id}» ×${background().mult} · персонаж «${character().id}» ×${character().mult===Infinity?'∞':character().mult} · прокачка +${state.upgrades} к базе`;
+$('shopCards').innerHTML=chars.filter(c=>['Uncommon','Rare','Epic'].includes(c.rarity)).map(c=>`<div class="char-card"><img src="${characterImage(c.id)}" alt="${c.id}"><span class="rarity">${c.rarity}</span><b>${c.id}</b><small>Доход ×${c.mult}</small><button class="action ${state.owned.includes(c.id)?'secondary':''}" data-buy="${c.id}">${state.owned.includes(c.id)?(state.selected===c.id?'Выбран':'Выбрать'):'Купить · '+fmt(c.price)+' 💧'}</button></div>`).join('');
+$('inventoryCount').textContent=`Персонажей: ${state.owned.length}/${chars.length}`;
+$('inventoryCards').innerHTML=chars.map(c=>{const owned=state.owned.includes(c.id);return `<div class="char-card inventory-card ${owned?'':'locked'}"><img src="${characterImage(c.id)}" alt="${owned?c.id:'Неизвестный персонаж'}"><span class="rarity">${c.rarity}</span><b>${owned?c.id:'???'}</b><small>${owned?`Доход ×${c.mult===Infinity?'∞':c.mult}`:'Ещё не получен'}</small>${owned?`<span class="badge-owned">${state.selected===c.id?'Выбран':'В коллекции'}</span><button class="action ${state.selected===c.id?'secondary':''}" data-select-char="${c.id}">${state.selected===c.id?'Выбран':'Выбрать'}</button>`:'<button class="action secondary" disabled>Не получен</button>'}</div>`}).join('');
+$('backgroundCards').innerHTML=bgs.map(b=>`<div class="item-card background-card" style="background-image:linear-gradient(#07121a44,#07121acc),url('${b.file}')"><strong>${b.id} · ×${b.mult}</strong><button class="action ${state.bg===b.id?'secondary':''}" data-bg="${b.id}">${state.bg===b.id?'Выбран':'Выбрать'}</button></div>`).join('');
+$('upgrades').innerHTML=`<div class="upgrade-grid">
+<div class="item-card upgrade-item"><b>👆 Сила нажатия · ур. ${state.upgrades}</b><div class="meta">+1 к базовым каплям за клик. Сейчас база: ${1+state.upgrades}</div><div class="meta">Цена: ${fmt(upgradeCost(100,state.upgrades))} 💧</div><button class="action" data-upgrade="click">Улучшить</button></div>
+<div class="item-card upgrade-item"><b>🤖 Автосбор · ур. ${state.autoLevel}</b><div class="meta">Даёт ${fmt(autoIncome())} капель в секунду с учётом множителей</div><div class="meta">Цена: ${fmt(upgradeCost(250,state.autoLevel))} 💧</div><button class="action" data-upgrade="auto">Улучшить</button></div>
+<div class="item-card upgrade-item"><b>🎯 Шанс крита · ур. ${state.critLevel}</b><div class="meta">Шанс критического клика: ${critChance()}% (максимум 50%)</div><div class="meta">Цена: ${fmt(upgradeCost(400,state.critLevel))} 💧</div><button class="action" data-upgrade="crit" ${state.critLevel>=25?'disabled':''}>Улучшить</button></div>
+<div class="item-card upgrade-item"><b>💥 Сила крита · ур. ${state.critPowerLevel}</b><div class="meta">Критический клик приносит ×${critMultiplier()}</div><div class="meta">Цена: ${fmt(upgradeCost(600,state.critPowerLevel))} 💧</div><button class="action" data-upgrade="critPower">Улучшить</button></div>
+</div>`;
+$('chances').innerHTML=chars.filter(c=>c.chance>0).map(c=>`<div class="chance"><span>${c.rarity} · ${c.id}</span><b>${c.chance}%</b></div>`).join('');
+$('musicVolume').value=state.music;$('soundVolume').value=state.sound;$('musicValue').textContent=state.music+'%';$('soundValue').textContent=state.sound+'%';$('musicToggle').textContent=state.musicOn?'Выключить музыку':'Включить музыку';
+$('music').volume=state.music/100;
+}
+function playMusic(){if(state.musicOn){$('music').volume=state.music/100;$('music').play().catch(()=>{});}}
+function playTapSound(){
+const src=characterSound(character().id);if(src){const a=new Audio(src);a.volume=state.sound/100;a.play().catch(()=>fallbackTap());}else fallbackTap();
+}
+function fallbackTap(){const C=window.AudioContext||window.webkitAudioContext;if(!C||!state.sound)return;const ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=520;g.gain.value=.035*state.sound/100;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.07);
+
+}
+$('tap').addEventListener('click',e=>{playMusic();playTapSound();let gain=power();const critical=Math.random()*100<critChance();if(critical)gain=Math.floor(gain*critMultiplier());state.drops+=gain;sayFloat((critical?'КРИТ! +':'+')+fmt(gain)+' 💧');render();save();});
+document.addEventListener('click',e=>{
+const buy=e.target.closest('[data-buy]');if(buy){const c=chars.find(x=>x.id===buy.dataset.buy);if(!c)return;if(state.owned.includes(c.id)){state.selected=c.id;}else if(state.drops>=c.price){state.drops-=c.price;state.owned.push(c.id);state.selected=c.id;}else{return;}render();save();}
+const select=e.target.closest('[data-select-char]');if(select&&state.owned.includes(select.dataset.selectChar)){state.selected=select.dataset.selectChar;render();save();}
+const up=e.target.closest('[data-upgrade]');if(up){const map={click:['upgrades',100],auto:['autoLevel',250],crit:['critLevel',400],critPower:['critPowerLevel',600]};const [key,base]=map[up.dataset.upgrade];const cost=upgradeCost(base,state[key]);if(up.dataset.upgrade==='crit'&&state.critLevel>=25)return;if(state.drops>=cost){state.drops-=cost;state[key]++;render();save();}}
+const bg=e.target.closest('[data-bg]');if(bg){state.bg=bg.dataset.bg;render();save();}
+if(e.target.id==='upgradeBuy'){const cost=Math.floor(100*Math.pow(1.65,state.upgrades));if(state.drops>=cost){state.drops-=cost;state.upgrades++;render();save();}}
+});
+$('roll').addEventListener('click',()=>{
+if(state.drops<1500){$('rollResult').innerHTML='<div class="result">Не хватает капель человечности 💧</div>';return;}
+state.drops-=1500;let r=Math.random()*100,acc=0,picked=chars[0];
+for(const c of chars.slice(1)){acc+=c.chance;if(r<acc){picked=c;break;}}
+const duplicate=state.owned.includes(picked.id);
+if(duplicate)state.drops+=100;else state.owned.push(picked.id);
+state.selected=picked.id;
+$('rollResult').innerHTML=`<div class="result"><div>${duplicate?'🔁 Повторка! +100 капель':'🎉 Новый персонаж!'}</div><img src="${characterImage(picked.id)}" alt=""><b>${picked.id}</b><div class="rarity">${picked.rarity} · ×${picked.mult===Infinity?'∞':picked.mult}</div></div>`;
+render();save();
+});
+document.querySelectorAll('[data-screen]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('[data-screen]').forEach(b=>b.classList.remove('active'));$(btn.dataset.screen).classList.add('active');btn.classList.add('active');playMusic();}));
+const promoRewards={'мистер':{type:'drops',amount:50000},'редис':{type:'character',id:'Тимогей'}};
+$('promoActivate').addEventListener('click',()=>{
+const code=$('promoInput').value.trim().toLowerCase();const msg=$('promoMessage');msg.className='promo-message';
+if(!code){msg.textContent='Введи промокод.';msg.classList.add('err');return;}
+if(state.redeemedPromos.includes(code)){msg.textContent='Этот промокод уже использован.';msg.classList.add('err');return;}
+if(!Object.prototype.hasOwnProperty.call(promoRewards,code)){msg.textContent='Такого промокода нет.';msg.classList.add('err');return;}
+const reward=promoRewards[code];let message='';
+if(reward.type==='drops'){state.drops+=reward.amount;message=`Промокод активирован! +${fmt(reward.amount)} капель человечности 💧`;}
+else if(reward.type==='character'){
+const alreadyOwned=state.owned.includes(reward.id);
+if(alreadyOwned){state.drops+=100;message=`Тимогей уже есть в инвентаре — повторка! +100 капель человечности 💧`;}
+else{state.owned.push(reward.id);state.selected=reward.id;message='Промокод активирован! Ты получил персонажа Тимогей 🎉';}
+}
+state.redeemedPromos.push(code);$('promoInput').value='';
+msg.textContent=message;msg.classList.add('ok');render();save();
+});
+$('promoInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('promoActivate').click();});
+$('musicVolume').addEventListener('input',e=>{state.music=+e.target.value;$('music').volume=state.music/100;$('musicValue').textContent=state.music+'%';save();});
+$('soundVolume').addEventListener('input',e=>{state.sound=+e.target.value;$('soundValue').textContent=state.sound+'%';save();});
+$('musicToggle').addEventListener('click',()=>{state.musicOn=!state.musicOn;if(state.musicOn)playMusic();else $('music').pause();render();save();});
+$('save').addEventListener('click',()=>{save();$('save').textContent='Сохранено ✓';setTimeout(()=>$('save').textContent='Сохранить прогресс',1200);});
+$('reset').addEventListener('click',()=>{if(confirm('Сбросить весь прогресс?')){state={...defaultState,owned:['Чеченец']};save();$('rollResult').innerHTML='';render();}});
+document.addEventListener('pointerdown',playMusic,{once:true});
+render();playMusic();
+setInterval(()=>{const income=autoIncome();if(income>0&&Number.isFinite(income)){state.drops+=income;render();save();}},1000);
+})();
+</script></body></html>
